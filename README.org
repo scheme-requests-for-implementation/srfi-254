@@ -1,7 +1,7 @@
 
 # SPDX-FileCopyrightText: 2024 Arthur A. Gleckler
 # SPDX-License-Identifier: MIT
-* SRFI 254: Guardians
+* SRFI 254: Ephemerons and Guardians
 
 ** by Marc Nieper-Wißkirchen
 
@@ -9,10 +9,10 @@
 
 keywords: [[https://srfi.schemers.org/?keywords=garbage-collection][Garbage Collection]]
 
-This repository hosts [[https://srfi.schemers.org/srfi-254/][SRFI 254]]: Guardians, a [[https://srfi.schemers.org/][Scheme Request for Implementation]].
+This repository hosts [[https://srfi.schemers.org/srfi-254/][SRFI 254]]: Ephemerons and Guardians, a [[https://srfi.schemers.org/][Scheme Request for Implementation]].
 
 This SRFI is in /draft/ status.
-See also [[/srfi-246/][SRFI 246: Guardians]].
+See also [[/srfi-124/][SRFI 124: Ephemerons]] and [[/srfi-246/][SRFI 246: Guardians]].
 The full documentation for this SRFI can be found in the [[https://srfi.schemers.org/srfi-254/srfi-254.html][SRFI Document]].
 
 If you'd like to participate in the discussion of this SRFI, or report issues with it, please [[https://srfi.schemers.org/srfi-254/][join the SRFI-254 mailing list]] and send your message there.
