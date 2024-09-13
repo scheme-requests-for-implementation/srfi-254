@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-<!--
-SPDX-FileCopyrightText: 2024 R. Kent Dybvig, John Cowan, 
-Marc Nieper-Wißkirchen
-SPDX-License-Identifier: MIT
--->
+  <!--
+      SPDX-FileCopyrightText: Marc Nieper-Wißkirchen
+      SPDX-License-Identifier: MIT
+    -->
   <head>
     <meta charset="utf-8">
     <title>SRFI 254: Ephemerons and Guardians</title>
@@ -12,13 +11,24 @@ SPDX-License-Identifier: MIT
     <link rel="stylesheet" href="https://srfi.schemers.org/srfi.css" type="text/css">
     <meta name="viewport" content="width=device-width, initial-scale=1"></head>
   <body>
-    <h1><a href="https://srfi.schemers.org/"><img class="srfi-logo" src="https://srfi.schemers.org/srfi-logo.svg" alt="SRFI surfboard logo" /></a>254: Ephemerons and Guardians</h1>
+    <h1><a href="https://srfi.schemers.org/"><img class="srfi-logo"
+    src="https://srfi.schemers.org/srfi-logo.svg" alt="SRFI surfboard
+    logo" /></a>254: Ephemerons and Guardians</h1>
 
-    <p>by R. Kent Dybvig (specification author), John Cowan (author of <a href="https://srfi.schemers.org/srfi-246/">SRFI 246</a>, from which this is derived), and Marc Nieper-Wißkirchen (author of this SRFI) </p>
+    <p>by Marc Nieper-Wißkirchen</p>
 
-<h2 id="status">Status</h2>
+    <h2 id="status">Status</h2>
 
-    <p>This SRFI is currently in <em>draft</em> status.  Here is <a href="https://srfi.schemers.org/srfi-process.html">an explanation</a> of each status that a SRFI can hold.  To provide input on this SRFI, please send email to <code><a href="mailto:srfi+minus+254+at+srfi+dotschemers+dot+org">srfi-254@<span class="antispam">nospam</span>srfi.schemers.org</a></code>.  To subscribe to the list, follow <a href="https://srfi.schemers.org/srfi-list-subscribe.html">these instructions</a>.  You can access previous messages via the mailing list <a href="https://srfi-email.schemers.org/srfi-254/">archive</a>.</p>
+    <p>This SRFI is currently in <em>draft</em> status.  Here
+    is <a href="https://srfi.schemers.org/srfi-process.html">an
+    explanation</a> of each status that a SRFI can hold.  To provide
+    input on this SRFI, please send email
+    to <code><a href="mailto:srfi+minus+254+at+srfi+dotschemers+dot+org">srfi-254@<span class="antispam">nospam</span>srfi.schemers.org</a></code>.
+    To subscribe to the list,
+    follow <a href="https://srfi.schemers.org/srfi-list-subscribe.html">these
+    instructions</a>.  You can access previous messages via the
+    mailing
+    list <a href="https://srfi-email.schemers.org/srfi-254/">archive</a>.</p>
     <ul>
       <li>Received: 2024-09-11
         <p>This SRFI was forked from SRFI 246 on that date.</p></li>
@@ -26,151 +36,435 @@ SPDX-License-Identifier: MIT
       <li>60-day deadline: 2024-11-12</li>
     </ul>
 
-<h2 id="abstract">Abstract</h2>
+    <h2 id="abstract">Abstract</h2>
 
-<p>Guardians allow programs to protect objects from deallocation by the garbage collector and to determine which objects would otherwise have been deallocated. When the object has associated non-memory resources, a program can register it with a guardian. The GC will mark inaccessible objects but will not collect them; at the program's convenience, inaccessible objects are removed from the guardian and their non-memory resources are disposed of.
+    <p>This SRFI describes three concepts associated with the storage
+      management of a Scheme system, <i>ephemerons</i>, <i>guardians</i>, and
+    <i>transport cell guardians</i>.</p>
 
-Guardians allow objects to be saved from deallocation indefinitely so that they can be reused or so that clean-up or other actions can be performed using the data stored within the objects. Guardians avoid the problems associated with classical finalizers detailed in the Rationale section.</p>
+    <p>
+      An ephemeron is a record structure with a <i>key</i> and a <i>value</i> field.
+      An ephemeron can be </i>broken</i>.  Breaking an ephemeron replaces the
+      key and value by <code>#f</code>.  An implementation of this SRFI
+      breaks an ephemeron when it proves that the storage occupied by
+      the key could be reclaimed if that the ephemeron were broken.
+    </p>
 
-<h2 id="issues">Issues</h2>
+    <p>
+      A guardian is a structure containing objects as <i>guarded</i> or
+      <i>resurrected</i> elements.  Initially, guardians are empty.
+      Objects can be added in guarded elements to the guardian by the
+      programmer.  An implementation of this SRFI resurrects an
+      element when it proves that the storage occupied by
+      the object could be reclaimed if all guardians in the system
+      were empty.  Objects from resurrected elements can be queried
+      and removed from the guardian by the programmer.  Instead of the
+      object itself, a <i>representative</i> can be returned.
+    </p>
 
-<p>None at present.</p>
+    <p>
+      A transport cell guardian is a structure containing <i>transport
+        cells</i>, similar to a guardian.  Whenever an object in an
+      guarded transport cell in the transport cell guardian is
+      moved by the garbage collector, the transport cell is resurrected
+      so that it can be queried by the programmer.
+    </p>
 
-<h2 id="rationale">Rationale</h2>
+    <h2 id="issues">Issues</h2>
 
-<p>The difficulties with classical finalizers are:</p>
+    <ul>
+      <li>Include examples.</li>
+      <li>Write tests.</li>
+    </ul>
 
-<ul><li>When run directly by the garbage collector, they must be executed within a critical section, because the collector may interrupt the rest of the program at arbitrary points.</li>
+    <h2 id="rationale">Rationale</h2>
 
-<li>When cyclic and shared structures must be finalized, it may be essential to control the order in which finalization is done.</li>
+    <p>Neither ephemerons nor guardians can be implemented portably in
+      existing standard Scheme so incorporating them as a standard
+      features in Scheme implementations makes Scheme more expressive
+      and more portable programs possible.
+    </p>
 
-<li>They do not always allow the full range of language features to be employed. For example, allocation may not be possible from within the garbage collector, as the collector may not be re-entrant. If an error is signaled while the collector is running, it is not always clear how to recover.</li>
+    <p>Ephemerons and guardians have been implemented in many Scheme
+      systems and are incorporated in other programming languages as
+      well, so their is sufficient experience both in terms of use
+      cases and implementability with those features.
+    </p>
 
-<li>It may or may not be appropriate to examine the object being finalized in order to determine what to do with it. In particular, it may be the Right Thing to protect the object from reclamation by placing it in a variable or a container, with or without re-registering it for finalization.</li></ul>
+    <p>Transport cell guardians are trivially to implement in Scheme
+      systems with non-moving garbage collectors.  In Scheme systems
+      with moving garbage collections, transport cell guardians or an
+      equally powerful concept are needed to when hash values are to
+      be derived from object addresses.
+    </p>
 
-<p>Guardians solve all of these problems at the expense of manual reclamation. Objects are preserved by a guardian; periodically, the guardian must be invoked to allow them to be reclaimed by the collector or to preserve them.</p>
+    <p>Use cases for ephemerons are portable implementations hash
+      tables that hold the keys or the associated values or both
+      weakly.</p>
 
-<h2 id="specification">Specification</h2>
+    <p>A use cases for guardians is the management of externally
+      allocated resources that need to be eventually freed when all
+      Scheme objects referencing them have been conceptually destroyed
+      by the garbage collector.</p>
 
-<p>Guardians are procedures that encapsulate groups of objects registered for preservation. When a guardian is created, the group of registered objects is empty. An object is registered with a guardian by passing the object as an argument to the guardian, as well as a representative object to be returned when the object is retrieved from the guardian.</p>
+    <p>Use cases for transport cell guardians are efficient portable
+      implementations of <code>eq?</code>-based hashing data structures.
+    </p>
 
-<p>The group of registered objects associated with a guardian is logically subdivided into two disjoint subgroups: a subgroup referred to as the <i>accessible objects group</i>, and another referred to as the <i>inaccessible objects group</i>. Inaccessible objects are objects that have been proven to be inaccessible (except through the guardian mechanism itself or through a weak reference), and accessible objects are objects that have not been proven so. Objects may be registered in more than one guardian, and a guardian may be registered in another guardian.</p>
+    <p>
+      This SRFI
+      supersedes <a href="https://srfi.schemers.org/srfi-246/srfi-246.html">SRFI
+      246</a>.  It is recommended that it
+      supersedes <a href="https://srfi.schemers.org/srfi-124/srfi-124.html">SRFI
+      124</a> as well and that SRFI 124 should be withdrawn.  This
+      SRFI renames the datum field of SRFI 124's ephemerons to value
+      field because a datum in Scheme is a particular type of value.
+    </p>
 
-<p>The word "proven" is important here: it may be that some objects in the accessible objects subgroup are indeed inaccessible but that this has not yet been proven. This proof may not be made in some cases until long after the object actually becomes inaccessible, typically when the collector is run.</p>
+    <h2 id="specification">Specification</h2>
 
-<p>Objects registered with a guardian are initially placed in the accessible objects group and are moved into the inaccessible objects group at some point after they become inaccessible. The representative of an object in the inaccessible objects group is retrieved by invoking the guardian without arguments. If there are no objects in the inaccessible objects group, the guardian returns <code>#f</code>.</p>
+    <p>This SRFI extends the reports on Scheme by stipulating that
+      locations can be <dfn>strongly holding</dfn> and <dfn>weakly
+        holding</dfn>.  Except as noted, all newly chosen locations are
+      strongly holding.</p>
 
-<p>Although an object registered without a representative and returned from a guardian has been proven otherwise inaccessible (except via a weak pointer), it has not yet been reclaimed by the storage management system and will not be reclaimed until after the last non-weak pointer to it within or outside of the guardian system has been dropped. In fact, objects that have been retrieved from a guardian have no special status in this or in any other regard.  This feature circumvents the problems that might otherwise arise with shared or cyclic structure. A shared or cyclic structure consisting of inaccessible objects is preserved in its entirety, and each piece registered for preservation with any guardian is placed in the inaccessible objects set for that guardian. The programmer then has complete control over the order in which pieces of the structure are processed.</p>
+    <p>As specified in the reports on Scheme, implementations of
+      Scheme are required to be properly tail-recursive.  The formal
+      definition of proper tail-recursion can be found
+      in <cite><a href="#clinger">[2]</a></cite>.  This SRFI extends
+      the property tail recursive semantics in <cite>[2]</cite> by replacing the last line
+      <blockquote>
+        and <var>&beta;</var>, &hellip; do not occur
+        within <var>v</var>, <var>&rho;</var>, <var>&kappa;</var>, <var>&sigma;</var>
+      </blockquote>
+      in the garbage collection rule with
+      <blockquote>
+        and <var>&beta;</var>, &hellip; do not occur
+        within <var>v</var>, <var>&rho;</var>, <var>&kappa;</var>, <var>&sigma;'</var>
+        where <var>&sigma;</var>
+        = <var>&sigma;'</var>[<var>&beta;'</var>, &hellip;
+        &mapsto; <var>v''</var>, &hellip;] and <var>&beta;'</var> are
+        weakly holding.
+      </blockquote>
+    </p>
 
-<p>An object may be registered with a guardian more than once, in which case it will be retrievable more than once.</p>
+    <p>This SRFI further stipulates that locations and sequences of
+      locations can be <dfn>kept live</dfn> in the course of a
+      computation.
+    </p>
 
-<h3 id="Procedures">Procedures</h3>
+    <p>Finally, it stipulates that objects may be <dfn>moved</dfn> in
+      the course of a computation with the following restriction: If
+      an object <var>obj<sub>1</sub></var> is moved, every
+      object <var>obj<sub>2</sub></var> such that <code>eq?</code>
+      returns <code>#t</code> when applied
+      to <var>obj<sub>1</sub></var> and <var>obj<sub>2</sub></var> is moved as well.
+    <p>
 
-<p><code>(make-guardian)</code></p>
+    <h3>Ephemerons</h3>
 
-<p>Returns a newly allocated guardian with no registered objects.</p>
+    <p>The procedures in this section are exported by the <code>(srfi
+        :254 ephemerons-and-guardians ephemerons)</code> library.  The
+        procedure <code>reference-barrier</code> is also exported by
+        the <code>(srfi :254 ephemerons-and-guardians guardians)
+        library</code>.
+    </p>
 
-<p><code>(guardian?</code>&nbsp;<em>obj</em><code>)</code></p>
+    <p>An <dfn>ephemeron</dfn> is a record structure with two fields
+      called the <dfn>key</dfn> and <dfn>value</dfn> fields.  The
+      content of the key field is stored in a weakly holding
+      location.</p>
 
-<p>Returns <code>#t</code> if obj is a guardian and <code>#f</code> otherwise.</p>
+    <p>Ephemerons can be <dfn>broken</dfn>.  When an ephemeron is
+      broken, the contents of its value field are replaced
+      with <code>#f</code>.
+    </p>
 
-<p><code>(</code><em>guardian obj</em> [ <em>rep</em> ]<code>)</code></p>
+    <p>
+      If the content of an ephemeron's key field denotes a location or
+      a sequence of locations, the ephemeron is broken in the course
+      of the computation if the garbage collector would reclaim the
+      location or sequence of locations if the location denoted by the
+      ephemeron's value field were weakly holding.  The ephemeron may
+      be broken in the course of a computation if the Scheme
+      implementation can prove that the location or sequence of
+      locations will not be kept live in the future of the computation
+      if the ephemeron is broken.
+    </p>
 
-<p>Registers <em>obj</em> with <em>guardian</em>, specifying <em>rep</em> as the representative object. If <em>rep</em> is omitted, the representative object is <em>obj</em>.</p>
+    <p>Procedure: <strong>reference-barrier</strong> <var>obj</var></p>
 
-<p><code>(</code><em>guardian</em><code>)</code></p>
+    <p>If <var>obj</var> is an object such as a pair, string, vector,
+      or bytevector that denotes a location or a sequence of
+      locations, the location or the sequence of locations is kept
+      live.
+    </p>
 
-<p>Returns the representative of a single object from <em>guardian</em> and removes the object.</p>
+    <p><i>Comment:</i> Other procedures may keep locations live as
+      well.</p>
 
-<p><code>(unregister-guardian&nbsp;</code><em>guardian</em><code>)</code></p>
+    <p>Procedure: <strong>make-ephemeron</strong> <var>key</var> <var>value</var></p>
 
-<p>Unregisters all the accessible objects currently registered with <em>guardian</em>, with one caveat. Objects registered by other threads than the current thread are not necessarily removed from <em>guardian</em>. To ensure that all objects are unregistered in a multithreaded application, a single thread can be used both to register and unregister objects. Alternatively, an application can arrange to define a handler that calls <code>unregister-guardian</code> after it calls the collector.</p>
+    <p>The <code>make-ephemeron</code> procedure returns a newly
+      allocated ephemeron with fields <var>key</var>, which should
+      denote a location or a sequence of locations,
+      and <var>value</var>.
+    </p>
 
-<p>In any case, <code>unregister-guardian</code> returns a list containing the representative objects corresponding to the objects that it unregisters, with duplicates as appropriate if the same object is registered more than once with <em>guardian</em>. Objects already resurrected but not yet retrieved from <em>guardian</em> are not included in the list but remain retrievable from <em>guardian</em>.</p>
+    <p>Procedure: <strong>ephemeron?</strong> <var>object</var></p>
 
-<h2 id="abstract-example">Abstract Example</h2>
-<p>This example shows how to manage manually allocated and deallocated
-resources automatically by wrapping them in a <code>handle</code> record
-type, which can also contain auxiliary data. For example, a resource
-might be a POSIX file descriptor and a handle might be a port.</p>
-<p>This implementation is not thread-safe.</p>
-<pre><code>(library (resources)
-  (export
-    make-handle handle? get-handle-resource
-    get-handle-auxdata set-handle-auxdata!)
-  (import
-    (scheme base)
-    (scheme guardians))
-  (begin
-    ;;; Allocate resources using handles.
+    <p>The <code>ephemeron?</code> procedure returns <code>#t</code>
+      if its argument is an ephemeron, and <code>#f</code> otherwise.
+    </p>
 
-    ;; Allocate and deallocate a resource which is not managed by Scheme.
+    <p>Procedure: <strong>ephemeron-key</strong> <var>ephemeron</var></p>
 
-    (define (allocate-resource) ...)
-    (define (free-resource resource) ...)
+    <p>The <code>ephemeron-key</code> procedure returns the contents
+      of the key field of <var>ephemeron</var> if the ephemeron hasn't
+      been broken, and <code>#f</code> otherwise.
+    </p>
 
-    ;; Handle type.  Auxdata is Scheme data associated with the resource.
+    <p>Procedure: <strong>ephemeron-value</strong> <var>ephemeron</var></p>
 
-    (define-record-type handle
-      (raw-make-handle resource auxdata)
-      handle?
-      (auxdata get-handle-auxdata set-handle-auxdata!)
-      (resource get-resource))
+    <p>The <code>ephemeron-value</code> procedure returns the contents
+      of the value field of <var>ephemeron</var>.
+    </p>
 
-    ;; The global guardian for all handles
-    (define handle-guardian (make-guardian))
+    <p>Procedure: <strong>ephemeron-broken?</strong> <var>ephemeron</var></p>
 
-    ;; Return an initialized handle.
-    (define (make-handle auxdata)
-      (let* ((resource (allocate-resource))
-             (handle (raw-make-handle resource auxdata)))
-        ;; Free up resources whose handles are garbage.
-        ;; Alternative: (for-each free-resource
-        ;;                        (unregister-guardian handle-guardian))
-        (let loop ((r (handle-guardian)))
-           (when r
-             (free-resource r)
-             (loop (handle-guardian)))
-        ;; Protect new resource and return handle.
-        ;; The resource is the representative object.
-        (handle-guardian handle resource)
-        handle)))))</code></pre>
-<h2 id="implementation">Implementation</h2>
+    <p>The <code>ephemeron-broken?</code> procedure
+      returns <code>#t</code> if <var>ephemeron</var> has been broken,
+      and <code>#f</code> otherwise.
+    </p>
 
-<p>A portable implementation of guardians is not possible. Chez Scheme provides guardians as explained in this SRFI; Guile provides them as well, but without <code>guardian-unregister</code>.</p>
+    <h3>Guardians</h3>
 
-<h2 id="acknowledgements">Acknowledgements</h2>
+    <p>The procedures of this section are exported by the <code>(srfi
+        :254 ephemerons-and-guardians guardians) library</code>.
+    </p>
 
-<p>Thanks to the members of the SRFI discussion group.</p>
+    <p>Guardians first appeared in <cite><a href="dybvig">[3]</a></cite>.</p>
 
-<h2 id="copyright">Copyright</h2>
-<p>&copy; 2023 John Cowan.
-This SRFI is a derivative work of <a href="https://cisco.github.io/ChezScheme/csug9.5/smgmt.html#./smgmt:h2">Section 13.2 of <i>Chez Scheme User's Guide version 9</i></a>, which is licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License Version 2.0</a>, &copy; Cisco Systems, Inc. 2022. The SRFI as a whole is licensed as follows:</p>
+    <p>A <dfn>guardian</dfn> is a heterogenous structure with two
+      types of elements, <dfn>guarded</dfn> elements
+      and <dfn>resurrected</dfn> elements.  A guarded element is
+      a record structure with two fields called the <dfn>object</dfn>
+      and the <dfn>representative</dfn> field.  A resurrected
+      element contains a single value.
+    </p>
 
-<blockquote>
-<p>
-  Permission is hereby granted, free of charge, to any person
-  obtaining a copy of this software and associated documentation files
-  (the "Software"), to deal in the Software without restriction,
-  including without limitation the rights to use, copy, modify, merge,
-  publish, distribute, sublicense, and/or sell copies of the Software,
-  and to permit persons to whom the Software is furnished to do so,
-  subject to the following conditions:</p>
+    <p>A guarded element of a guardian can be <dfn>resurrected</dfn>.
+      When an guarded element is resurrected, the guarded element is
+      removed from the guardian and a resurrected element containing
+      the content of the representative field of the removed guarded
+      element is added to the guardian.
+    </p>
 
-<p>
-  The above copyright notice and this permission notice (including the
-  next paragraph) shall be included in all copies or substantial
-  portions of the Software.</p>
-<p>
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-  NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-  SOFTWARE.</p>
-</blockquote>
+    <p>If the content of an guarded element denotes a location or a
+      sequence of locations, the element is resurrected in the
+      course of the computation when the garbage collector would
+      reclaim the location or sequence of locations if all locations
+      denoted by the fields of guarded elements or by resurrected
+      elements of all guardians were weakly resurrected.  The element
+      may be resurrected in the course of a computation if the
+      Scheme implementation can prove that the location or sequence of
+      locations will not be kept live in the future of the computation
+      if the element is resurrected.
+    </p>
 
-  <hr>
-  <address>Editor: <a href="mailto:srfi-editors+at+srfi+dot+schemers+dot+org">Arthur A. Gleckler</a></address></body></html>
+    <p>
+      Guardians are represented by a Scheme
+      procedures <var>guardian</var>.  When <var>guardian</var> is
+      invoked on two Scheme values <var>obj</var> and <var>rep</var>,
+      where <var>obj</var> should denote a location or a sequence of
+      locations and <var>rep</var> should not be <code>#f</code>, an
+      guarded element whose object field contains <var>obj</var>
+      and whose representative field contains <var>rep</var> is added
+      to the guardian.
+    </p>
+
+    <p>When <var>guardian</var> is invoked on no
+      arguments, a resurrected element if available is removed from
+      the guardian and its contents returned.  If no resurrected
+      element is available, <code>#f</code> is returned.
+    </p>
+
+    <p>Procedure: <strong>make-guardian</strong></p>
+
+    <p>The <code>make-guardian</code> procedure returns a newly
+      allocated guardian, initially with no elements.
+    </p>
+
+    <p>Procedure: <strong>guardian?</strong> <var>obj</var></p>
+
+    <p>The <code>guardian?</code> procedure returns <code>#t</code> if
+      its argument is a guardian, and <code>#f</code> otherwise.
+    </p>
+
+    <h3>Transport Cell Guardians</h3>
+
+    <p>The procedures of this section are exported by the <code>(srfi
+        :254 ephemerons-and-guardians transport-cell-guardians) library</code>.
+    </p>
+
+    <p>Transport (link) cells first appeared in <cite><a href="ghuloum">[1]</a></cite>.</p>
+
+    <p>A <dfn>transport cell</dfn> is a record structure with two
+      fields called the <dfn>key</dfn> and <dfn>value</dfn> fields.
+      The content of the key field is stored in a weakly holding
+      location.
+    </p>
+
+    <p>Transport cells can be <dfn>broken</dfn>.  If the content of its key
+      field denotes a location or a sequence of locations, the
+      transport cell is broken in the course of the computation when the
+      garbage collector reclaims the location or sequence of
+      locations.  The transport cell may be broken in the course of a
+      computation if the Scheme implementation can prove that the
+      location or sequence of locations will not be kept live in the
+      future of the computation if the ephemeron is broken.
+    </p>
+
+    <p>A <dfn>transport cell guardian</dfn> is a homogeneous structure
+      contain transport cells.
+    </p>
+
+    <p>
+      Transport cell guardians are represented by Scheme
+      procedures <var>guardian</var>.  When <var>guardian</var> is
+      invoked on two Scheme values <var>key</var>
+      and <var>value</var>, a transport cell with
+      fields <var>key</var> and <var>value</var> is added
+      to <var>guardian</var> and returned to the caller
+      of <var>guardian</var>.
+    </p>
+
+    <p>When <var>guardian</var> is invoked on no arguments and it
+      contains a transport cell whose key may have been moved since
+      the transport cell was added to <var>guardian</var>, such a
+      transport cell is removed from <var>guardian</var> and returned
+      to the caller of <var>guardian</var>.  If <var>guardian</var>
+      contains no such transport cell, <code>#f</code> is returned.
+    </p>
+
+    <p>Procedure: <strong>current-hash</strong> <var>obj</var></p>
+
+    <p>The <code>current-hash</code> procedure returns an exact
+      integer. If objects <var>obj<sub>1</sub></var>
+      and <var>obj<sub>2</sub></var> such that <code>eq?</code>
+      returns <code>#t</code> when applied to these objects are not
+      moved between an invocation of <code>current-hash</code>
+      to <var>obj<sub>1</sub></var> and an invocation
+      of <code>current-hash</code> to <var>obj<sub>2</sub></var>, both
+      calls to <code>current-hash</code> return the same exact integer.
+    </p>
+
+    <p>Procedure: <strong>make-transport-cell-guardian</strong></p>
+
+    <p>
+      The <code>make-transport-cell-guardian</code> procedure returns
+      a newly allocated transport cell guardian, initially containing
+      no transport cells.
+    </p>
+
+    <p>Procedure: <strong>transport-cell-guardian?</strong> <var>obj</var></p>
+
+    <p>The <code>transport-cell-guardian?</code> procedure returns <code>#t</code>
+      if its argument is a transport cell guardian, and <code>#f</code> otherwise.
+    </p>
+
+    <p>Procedure: <strong>transport-cell?</strong> <var>obj</var></p>
+
+    <p>The <code>transport-cell?</code> procedure returns <code>#t</code>
+      if its argument is a transport cell, and <code>#f</code> otherwise.
+    </p>
+
+    <p>Procedure: <strong>transport-cell-key</strong> <var>transport-cell</var></p>
+
+    <p>The <code>transport-cell-key</code> procedure returns the contents
+      of the key field of <var>transport-cell</var> if the transport-cell hasn't
+      been broken, and <code>#f</code> otherwise.
+    </p>
+
+    <p>Procedure: <strong>transport-cell-value</strong> <var>transport-cell</var></p>
+
+    <p>Procedure: <strong>transport-cell-broken?</strong> <var>transport-cell</var></p>
+
+    <p>The <code>transport-cell-broken?</code> procedure
+      returns <code>#t</code> if <var>transport-cell</var> has been broken,
+      and <code>#f</code> otherwise.
+    </p>
+
+    <h3>Composite Library</h3>
+
+    <p>The <code>(srfi :254)</code> and <code>(srfi :254
+        ephemerons-and-guardians)</code> libraries are a composite of the
+      libraries described above.
+    </p>
+
+    <p>The libraries exports all procedures and syntactic forms
+      provided by the component libraries.</p>
+
+    <h2 id="implementation">Implementation</h2>
+
+    <p>An implementation for Chez Scheme is provided.</p>
+
+    <h2 id="references">References</h2>
+
+    <ol>
+      <li id="ghuloum">
+        <a href="https://www.schemeworkshop.org/2007/procPaper3.pdf">Abdulziz
+          Ghuloum and R. Kent Dybvig: <i>Generation-Friendly Eq Hash
+          Tables</i></a>
+      </li>
+      <li id="clinger">
+        <a href="https://dl.acm.org/doi/pdf/10.1145/277650.277719">William
+          D. Clinger: <i>Proper tail recursion and space
+            efficiency</i></a>
+      </li>
+      <li id="dybvig">
+        <a href="https://dl.acm.org/doi/pdf/10.1145/173262.155110">R. Kent
+          Dybvig, Carl Bruggeman, and David Eby: <i>Guardians in a
+          Generation-Based Garbage Collector</i></a>
+      </li>
+    </ol>
+
+    <h2 id="acknowledgements">Acknowledgements</h2>
+
+    <p>Thanks to the members of the SRFI discussion group, to John
+      Cowan for writing SRFI 124 and SRFI 246, and to Kent Dybvig and his
+      collaborators for creating Chez Scheme, its documentation, and
+      the papers on guardians.
+    </p>
+
+    <h2 id="copyright">Copyright</h2>
+    <p>&copy; 2024 Marc Nieper-Wißkirchen.</p>
+
+    <p>
+      Permission is hereby granted, free of charge, to any person
+      obtaining a copy of this software and associated documentation files
+      (the "Software"), to deal in the Software without restriction,
+      including without limitation the rights to use, copy, modify, merge,
+      publish, distribute, sublicense, and/or sell copies of the Software,
+      and to permit persons to whom the Software is furnished to do so,
+      subject to the following conditions:</p>
+
+    <p>
+      The above copyright notice and this permission notice (including the
+      next paragraph) shall be included in all copies or substantial
+      portions of the Software.</p>
+    <p>
+      THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+      EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+      MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+      NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+      BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+      ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+      CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+      SOFTWARE.</p>
+
+    <hr>
+    <address>Editor: <a href="mailto:srfi-editors+at+srfi+dot+schemers+dot+org">Arthur
+    A. Gleckler</a></address>
+  </body>
+</html>
