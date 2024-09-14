@@ -45,9 +45,9 @@
     <p>
       An ephemeron is a record structure with a <i>key</i> and a <i>value</i> field.
       An ephemeron can be </i>broken</i>.  Breaking an ephemeron replaces the
-      key and value by <code>#f</code>.  An implementation of this SRFI
+      key and value with <code>#f</code>.  An implementation of this SRFI
       breaks an ephemeron when it proves that the storage occupied by
-      the key could be reclaimed if that the ephemeron were broken.
+      the key could be reclaimed if the ephemeron were broken.
     </p>
 
     <p>
@@ -64,7 +64,7 @@
 
     <p>
       A transport cell guardian is a structure containing <i>transport
-        cells</i>, similar to a guardian.  Whenever an object in an
+        cells</i>, similar to a guardian.  Whenever an object in a
       guarded transport cell in the transport cell guardian is
       moved by the garbage collector, the transport cell is resurrected
       so that it can be queried by the programmer.
@@ -80,8 +80,8 @@
     <h2 id="rationale">Rationale</h2>
 
     <p>Neither ephemerons nor guardians can be implemented portably in
-      existing standard Scheme so incorporating them as a standard
-      features in Scheme implementations makes Scheme more expressive
+      existing standard Scheme, so incorporating them as a standard
+      features in Scheme implementations makes Scheme more expressive,
       and more portable programs possible.
     </p>
 
@@ -91,18 +91,18 @@
       cases and implementability with those features.
     </p>
 
-    <p>Transport cell guardians are trivially to implement in Scheme
+    <p>Transport cell guardians are trivial to implement in Scheme
       systems with non-moving garbage collectors.  In Scheme systems
       with moving garbage collections, transport cell guardians or an
       equally powerful concept are needed to when hash values are to
       be derived from object addresses.
     </p>
 
-    <p>Use cases for ephemerons are portable implementations hash
+    <p>Use cases for ephemerons are portable implementations of hash
       tables that hold the keys or the associated values or both
       weakly.</p>
 
-    <p>A use cases for guardians is the management of externally
+    <p>A use case for guardians is the management of externally
       allocated resources that need to be eventually freed when all
       Scheme objects referencing them have been conceptually destroyed
       by the garbage collector.</p>
@@ -115,8 +115,8 @@
       This SRFI
       supersedes <a href="https://srfi.schemers.org/srfi-246/srfi-246.html">SRFI
       246</a>.  It is recommended that it
-      supersedes <a href="https://srfi.schemers.org/srfi-124/srfi-124.html">SRFI
-      124</a> as well and that SRFI 124 should be withdrawn.  This
+      supersede <a href="https://srfi.schemers.org/srfi-124/srfi-124.html">SRFI
+      124</a> as well, and that SRFI 124 be withdrawn.  This
       SRFI renames the datum field of SRFI 124's ephemerons to value
       field because a datum in Scheme is a particular type of value.
     </p>
@@ -254,13 +254,13 @@
     </p>
 
     <p>A guarded element of a guardian can be <dfn>resurrected</dfn>.
-      When an guarded element is resurrected, the guarded element is
+      When a guarded element is resurrected, the guarded element is
       removed from the guardian and a resurrected element containing
       the content of the representative field of the removed guarded
       element is added to the guardian.
     </p>
 
-    <p>If the content of an guarded element denotes a location or a
+    <p>If the object of a guarded element denotes a location or a
       sequence of locations, the element is resurrected in the
       course of the computation when the garbage collector would
       reclaim the location or sequence of locations if all locations
@@ -277,14 +277,14 @@
       procedures <var>guardian</var>.  When <var>guardian</var> is
       invoked on two Scheme values <var>obj</var> and <var>rep</var>,
       where <var>obj</var> should denote a location or a sequence of
-      locations and <var>rep</var> should not be <code>#f</code>, an
+      locations and <var>rep</var> should not be <code>#f</code>, a
       guarded element whose object field contains <var>obj</var>
       and whose representative field contains <var>rep</var> is added
       to the guardian.
     </p>
 
     <p>When <var>guardian</var> is invoked on no
-      arguments, a resurrected element if available is removed from
+      arguments, a resurrected element, if available, is removed from
       the guardian and its contents returned.  If no resurrected
       element is available, <code>#f</code> is returned.
     </p>
@@ -321,7 +321,7 @@
       garbage collector reclaims the location or sequence of
       locations.  The transport cell may be broken in the course of a
       computation if the Scheme implementation can prove that the
-      location or sequence of locations will not be kept live in the
+      location or sequence of locations will not be kept alive in the
       future of the computation if the ephemeron is broken.
     </p>
 
