@@ -129,24 +129,38 @@
       strongly holding.</p>
 
     <p>As specified in the reports on Scheme, implementations of
-      Scheme are required to be properly tail-recursive.  The formal
+      Scheme are required to be properly tail-recursive. The formal
       definition of proper tail-recursion can be found
-      in <cite><a href="#clinger">[2]</a></cite>.  This SRFI extends
-      the property tail recursive semantics in <cite>[2]</cite> by replacing the last line
-      <blockquote>
+      in <cite><a href="#clinger">[2]</a></cite>. This SRFI extends
+      the property tail recursive semantics in <cite>[2]</cite> by
+      replacing the last line
+    </p>
+    <blockquote>
+      <p>
         and <var>&beta;</var>, &hellip; do not occur
-        within <var>v</var>, <var>&rho;</var>, <var>&kappa;</var>, <var>&sigma;</var>
-      </blockquote>
+        within <var>v</var>, <var>&rho;</var>, <var>&kappa;</var>,
+        <var>&sigma;</var>
+      </p>
+    </blockquote>
+    <p>
       in the garbage collection rule with
-      <blockquote>
+    </p>
+    <blockquote>
+      <p>
         and <var>&beta;</var>, &hellip; do not occur
-        within <var>v</var>, <var>&rho;</var>, <var>&kappa;</var>, <var>&sigma;'</var>
+        within <var>v</var>, <var>&rho;</var>, <var>&kappa;</var>,
+        <var>&sigma;'</var>
         where <var>&sigma;</var>
         = <var>&sigma;'</var>[<var>&beta;'</var>, &hellip;
         &mapsto; <var>v''</var>, &hellip;] and <var>&beta;'</var> are
         weakly holding.
-      </blockquote>
-    </p>
+      </p>
+    </blockquote>
+
+    <p><i>Comment:</i> This extension of the proper tail recursive
+      semantics says that the values stored in weakly holding
+      locations are ignored when the garbage collector determines the
+      locations that can be reclaimed.</p>
 
     <p>This SRFI further stipulates that locations and sequences of
       locations can be <dfn>kept alive</dfn> in the course of a
@@ -159,7 +173,7 @@
       object <var>obj<sub>2</sub></var> such that <code>eq?</code>
       returns <code>#t</code> when applied
       to <var>obj<sub>1</sub></var> and <var>obj<sub>2</sub></var> is moved as well.
-    <p>
+    </p>
 
     <h3>Ephemerons</h3>
 
@@ -387,6 +401,10 @@
     </p>
 
     <p>Procedure: <strong>transport-cell-value</strong> <var>transport-cell</var></p>
+
+    <p>The <code>transport-cell-value</code> procedure returns the contents
+      of the value field of <var>transport-cell</var>.
+    </p>
 
     <p>Procedure: <strong>transport-cell-broken?</strong> <var>transport-cell</var></p>
 
