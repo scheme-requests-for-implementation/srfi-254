@@ -1,5 +1,8 @@
 #!chezscheme
 
+;; SPDX-FileCopyrightText: 2024 Marc Nieper-Wißkirchen
+;; SPDX-License-Identifier: MIT
+
 (library (srfi :254)
   (export
     reference-barrier

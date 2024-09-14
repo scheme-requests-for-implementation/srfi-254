@@ -1,5 +1,8 @@
 #!r6rs
 
+;; SPDX-FileCopyrightText: 2024 Marc Nieper-Wißkirchen
+;; SPDX-License-Identifier: MIT
+
 (library (srfi :254 ephemerons-and-guardians)
   (export
     reference-barrier
