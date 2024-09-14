@@ -44,7 +44,7 @@
 
     <p>
       An ephemeron is a record structure with a <i>key</i> and a <i>value</i> field.
-      An ephemeron can be </i>broken</i>.  Breaking an ephemeron replaces the
+      An ephemeron can be <i>broken</i>.  Breaking an ephemeron replaces the
       key and value with <code>#f</code>.  An implementation of this SRFI
       breaks an ephemeron when it proves that the storage occupied by
       the key could be reclaimed if the ephemeron were broken.
@@ -87,7 +87,7 @@
 
     <p>Ephemerons and guardians have been implemented in many Scheme
       systems and are incorporated in other programming languages as
-      well, so their is sufficient experience both in terms of use
+      well, so there is sufficient experience both in terms of use
       cases and implementability with those features.
     </p>
 
@@ -149,7 +149,7 @@
     </p>
 
     <p>This SRFI further stipulates that locations and sequences of
-      locations can be <dfn>kept live</dfn> in the course of a
+      locations can be <dfn>kept alive</dfn> in the course of a
       computation.
     </p>
 
@@ -188,7 +188,7 @@
       ephemeron's value field were weakly holding.  The ephemeron may
       be broken in the course of a computation if the Scheme
       implementation can prove that the location or sequence of
-      locations will not be kept live in the future of the computation
+      locations will not be kept alive in the future of the computation
       if the ephemeron is broken.
     </p>
 
@@ -197,10 +197,10 @@
     <p>If <var>obj</var> is an object such as a pair, string, vector,
       or bytevector that denotes a location or a sequence of
       locations, the location or the sequence of locations is kept
-      live.
+      alive.
     </p>
 
-    <p><i>Comment:</i> Other procedures may keep locations live as
+    <p><i>Comment:</i> Other procedures may keep locations alive as
       well.</p>
 
     <p>Procedure: <strong>make-ephemeron</strong> <var>key</var> <var>value</var></p>
@@ -260,7 +260,7 @@
       element is added to the guardian.
     </p>
 
-    <p>If the object of a guarded element denotes a location or a
+    <p>If the content of a guarded element denotes a location or a
       sequence of locations, the element is resurrected in the
       course of the computation when the garbage collector would
       reclaim the location or sequence of locations if all locations
@@ -268,7 +268,7 @@
       elements of all guardians were weakly resurrected.  The element
       may be resurrected in the course of a computation if the
       Scheme implementation can prove that the location or sequence of
-      locations will not be kept live in the future of the computation
+      locations will not be kept alive in the future of the computation
       if the element is resurrected.
     </p>
 
