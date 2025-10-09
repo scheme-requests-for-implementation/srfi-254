@@ -26,7 +26,7 @@
             (make-guardian $make-guardian)
             (guardian? $guardian?)))
 
-  (import (only $system $fxaddress $immediate?))
+  (import (only $system $immediate?))
 
   ;; Reference barrier
 
@@ -90,7 +90,7 @@
   (define current-hash
     (let ([w (fixnum-width)])
       (lambda (obj)
-        (fxrotate-bit-field ($fxaddress obj)
+        (fxrotate-bit-field (object->reference-address obj)
 			    0 (fx- w 1) (fx- w 4)))))
 
   (define $transport-cell-guardian (string-copy "transport-cell-guardian"))

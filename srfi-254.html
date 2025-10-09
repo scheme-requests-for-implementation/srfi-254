@@ -423,6 +423,139 @@
     <p>The libraries exports all procedures and syntactic forms
       provided by the component libraries.</p>
 
+    <h2 id="examples">Examples</h2>
+
+    <p>The following is a simple library defining list-based weakmaps,
+    whose implementation shows how <code>reference-barrier</code> is
+    used properly.  An example program, importing and testing the
+    library, is given below.</p>
+
+    <pre>
+#!r6rs
+
+(library (weakmaps)
+  (export
+    make-weakmap
+    weakmap?
+    weakmap-contains?
+    weakmap-set!
+    weakmap-ref
+    weakmap-delete!)
+  (import
+    (rnrs)
+    (rnrs mutable-pairs)
+    (srfi :254 ephemerons-and-guardians ephemerons))
+
+  ;; weakmap-ref and weakmap-contains? keep the KEY argument alive.
+  ;; The KEY argument to all procedures should denote a location or
+  ;; sequence of locations.
+
+  ;; Note that no explicit tests for broken ephemerons are necessary
+  ;; because "the broken key" #f can never be a regular key.
+
+  (define-record-type weakmap
+    (nongenerative) (sealed #t)
+    (fields (mutable entries))
+    (protocol
+      (lambda (new)
+        (lambda ()
+          (new '())))))
+
+  (define weakmap-contains?
+    (lambda (wm key)
+      (assert (weakmap? wm))
+      (let f ([entries (weakmap-entries wm)])
+        (if (pair? entries)
+            (if (eq? (ephemeron-key (car entries)) key)
+                (begin
+                  (reference-barrier key)
+                  #t)
+                (f (cdr entries)))
+            (begin
+              (reference-barrier key)
+              #f)))))
+
+  (define weakmap-set!
+    (lambda (wm key val)
+      (assert (weakmap? wm))
+      (let f ([entries (weakmap-entries wm)]
+              [set-tail! (lambda (tail) (weakmap-entries-set! wm tail))])
+        (if (null? entries)
+            (set-tail! (list (make-ephemeron key val)))
+            (if (eq? (ephemeron-key (car entries)) key)
+                (set-tail! (cons (make-ephemeron key val) (cdr entries)))
+                (f (cdr entries)
+                   (lambda (tail) (set-cdr! entries tail))))))))
+
+  (define weakmap-ref
+    (lambda (wm key default)
+      (assert (weakmap? wm))
+      (let f ([entries (weakmap-entries wm)])
+        (if (pair? entries)
+            (if (eq? (ephemeron-key (car entries)) key)
+                (let ([val (ephemeron-value (car entries))])
+                  (reference-barrier key)
+                  val)
+                (f (cdr entries)))
+            (begin
+              (reference-barrier key)
+              default)))))
+
+  (define weakmap-delete!
+    (lambda (wm key)
+      (assert (weakmap? wm))
+      (let f ([entries (weakmap-entries wm)]
+              [set-tail! (lambda (tail) (weakmap-entries-set! wm tail))])
+        (unless (null? entries)
+          (if (eq? (ephemeron-key (car entries)) key)
+              (set-tail! (cdr entries))
+              (f (cdr entries)
+                 (lambda (tail) (set-cdr! entries tail)))))))))
+
+#!r6rs
+
+(import
+  (rnrs)
+  (srfi :254)
+  (weakmaps))
+
+;;; Weakmaps
+
+(define wm (make-weakmap))
+(assert (weakmap? wm))
+
+(define x (string #\x))
+(define y (string #\y))
+
+(assert (not (weakmap-contains? wm x)))
+(assert (eq? 'dflt (weakmap-ref wm x 'dflt)))
+
+(weakmap-delete! wm y)
+
+(weakmap-set! wm x 1)
+(weakmap-set! wm y 2)
+
+(assert (weakmap-contains? wm x))
+(assert (weakmap-contains? wm y))
+
+(assert (eqv? 1 (weakmap-ref wm x #f)))
+(assert (eqv? 2 (weakmap-ref wm y #f)))
+
+(weakmap-set! wm x 3)
+(assert (eqv? 3 (weakmap-ref wm x #f)))
+(assert (eqv? 2 (weakmap-ref wm y #f)))
+
+(weakmap-delete! wm x)
+
+(assert (eqv? 2 (weakmap-ref wm y #f)))
+(assert (not (weakmap-contains? wm x)))
+
+(assert (eqv? 2
+          (let ([tmp y])
+            (set! y #f)
+            (weakmap-ref wm tmp #f))))
+</pre>
+
     <h2 id="implementation">Implementation</h2>
 
     <p>An implementation for Chez Scheme is provided.</p>
