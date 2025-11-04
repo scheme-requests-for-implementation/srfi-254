@@ -217,6 +217,43 @@
     <p><i>Comment:</i> Other procedures may keep locations alive as
       well.</p>
 
+    <p><i>Comment:</i> At least one procedure is needed that
+      guaranteedly keeps locations alive.  The alternative would have
+      been to require that every reference of a variable would keep
+      the location denoted by it alive but that would have
+      tremendously adverse consequences for optimizing compilers.</p>
+
+    <p>The following program using Chez Scheme's native ephemerons for
+      simplicity shows how code without <code>reference-barrier</code> or an equivalent construct is unreliable:</p>
+<pre>
+(import (scheme))
+
+(define eph #f)
+
+(define (f v)
+  (set! eph (ephemeron-cons v #t)))
+
+(define (g)
+  (car eph))
+
+(define (g/collect)
+  (collect)                             ;simulate GC
+  (car eph))
+
+(define foo
+  (lambda (f g)
+    (let ((v (vector 1 2)))
+      (f v)
+      (let ((w (g)))
+        (boolean=? (vector? v) (vector? w))))))
+
+(assert (foo f g))
+(assert (foo f g/collect))              ;fails
+</pre>
+
+    <p>The underlying reason here is that Chez Scheme's optimizer
+    replaces <code>(vector? v)</code> with <code>#t</code>.</p>
+
     <p>Procedure: <strong>make-ephemeron</strong> <var>key</var> <var>value</var></p>
 
     <p>The <code>make-ephemeron</code> procedure returns a newly
