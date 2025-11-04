@@ -486,38 +486,38 @@
     (lambda (wm key)
       (assert (weakmap? wm))
       (let f ([entries (weakmap-entries wm)])
-        (cond ((null? entries)
+        (cond [(null? entries)
                (reference-barrier key)
-              #f)
-              ((eq? (ephemeron-key (car entries)) key)
+               #f]
+              [(eq? (ephemeron-key (car entries)) key)
                (reference-barrier key)
-               #t)
-              (else (f (cdr entries)))))))
+               #t]
+              [else (f (cdr entries))])))))
 
   (define weakmap-set!
     (lambda (wm key val)
       (assert (weakmap? wm))
       (let f ([entries (weakmap-entries wm)]
               [set-tail! (lambda (tail) (weakmap-entries-set! wm tail))])
-        (cond ((null? entries)
-               (set-tail! (list (make-ephemeron key val))))
-              ((eq? (ephemeron-key (car entries)) key)
-               (set-tail! (cons (make-ephemeron key val) (cdr entries))))
-              (else (f (cdr entries)
-                       (lambda (tail) (set-cdr! entries tail))))))))
+        (cond [(null? entries)
+               (set-tail! (list (make-ephemeron key val)))]
+              [(eq? (ephemeron-key (car entries)) key)
+               (set-tail! (cons (make-ephemeron key val) (cdr entries)))]
+              [else (f (cdr entries)
+                       (lambda (tail) (set-cdr! entries tail)))]))))
 
   (define weakmap-ref
     (lambda (wm key default)
       (assert (weakmap? wm))
       (let f ([entries (weakmap-entries wm)])
-        (cond ((null? entries)
+        (cond [(null? entries)
                (reference-barrier key)
-               default)
-              ((eq? (ephemeron-key (car entries)) key)
+               default]
+              [(eq? (ephemeron-key (car entries)) key)
                (let ([val (ephemeron-value (car entries))])
                   (reference-barrier key)
-                  val))
-              (else (f (cdr entries)))))))
+                  val)]
+              [else (f (cdr entries))]))))
 
   (define weakmap-delete!
     (lambda (wm key)
@@ -581,12 +581,12 @@
   (lambda (wm key default)
     (assert (weakmap? wm))
     (let f ([entries (weakmap-entries wm)])
-      (cond ((null? entries)
+      (cond [(null? entries)
              (reference-barrier key)
-             default)
-            (else
+             default]
+            [else
              (or (ephemeron-ref (car entries) key)
-                 (f (cdr entries))))))))
+                 (f (cdr entries)))]))))
 </pre>
 
     <h2 id="implementation">Implementation</h2>
