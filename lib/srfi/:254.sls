@@ -1,5 +1,28 @@
 #!chezscheme
 
+;; © 2024 Marc Nieper-Wißkirchen.
+
+;; Permission is hereby granted, free of charge, to any person
+;; obtaining a copy of this software and associated documentation
+;; files (the "Software"), to deal in the Software without
+;; restriction, including without limitation the rights to use, copy,
+;; modify, merge, publish, distribute, sublicense, and/or sell copies
+;; of the Software, and to permit persons to whom the Software is
+;; furnished to do so, subject to the following conditions:
+
+;; The above copyright notice and this permission notice (including
+;; the next paragraph) shall be included in all copies or substantial
+;; portions of the Software.
+
+;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+;; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+;; NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+;; BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+;; ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+;; SOFTWARE.
+
 ;; SPDX-FileCopyrightText: 2024 Marc Nieper-Wißkirchen
 ;; SPDX-License-Identifier: MIT
 
@@ -11,6 +34,7 @@
     ephemeron-key
     ephemeron-value
     ephemeron-broken?
+    ephemeron-ref
     make-guardian
     guardian?
     current-hash
@@ -61,6 +85,17 @@
       (assert (ephemeron-pair? eph))
       (let ([value (cdr eph)])
         (and (not (bwp-object? (car eph))) value))))
+
+  (define ephemeron-ref
+    (case-lambda
+      [(eph key default)
+       (assert (ephemeron-pair? eph))
+       (if (eq? (ephemeron-key eph) key)
+           (let ([val (ephemeron-value eph)])
+             (reference-barrier key)
+             val)
+           default)]
+      [(eph key) (ephemeron-ref eph key #f)]))
 
   ;; Guardians
 
