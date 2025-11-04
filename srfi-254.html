@@ -574,6 +574,21 @@
             (weakmap-ref wm tmp #f))))
 </pre>
 
+    <p>Here is a version of <code>weakmap-ref</code> that uses the convenience procedure <code>ephemeron-ref</code>:</p>
+
+<pre>
+(define weakmap-ref
+  (lambda (wm key default)
+    (assert (weakmap? wm))
+    (let f ([entries (weakmap-entries wm)])
+      (cond ((null? entries)
+             (reference-barrier key)
+             default)
+            (else
+             (or (ephemeron-ref (car entries) key)
+                 (f (cdr entries))))))))
+</pre>
+
     <h2 id="implementation">Implementation</h2>
 
     <p>An implementation for Chez Scheme is provided.</p>
