@@ -10,5 +10,6 @@
     ephemeron?
     ephemeron-key
     ephemeron-value
-    ephemeron-broken?)
+    ephemeron-broken?
+    ephemeron-ref)
   (import (srfi :254)))
