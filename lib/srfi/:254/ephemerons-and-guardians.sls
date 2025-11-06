@@ -11,6 +11,7 @@
     ephemeron-key
     ephemeron-value
     ephemeron-broken?
+    ephemeron-ref
     make-guardian
     guardian?
     current-hash

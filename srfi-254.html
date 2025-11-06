@@ -198,12 +198,12 @@
       If the content of an ephemeron's key field denotes a location or
       a sequence of locations, the ephemeron is broken in the course
       of the computation if the garbage collector would reclaim the
-      location or sequence of locations if the location denoted by the
-      ephemeron's value field were weakly holding.  The ephemeron may
-      be broken in the course of a computation if the Scheme
-      implementation can prove that the location or sequence of
-      locations will not be kept alive in the future of the computation
-      if the ephemeron is broken.
+      location or sequence of locations if the locations denoted by
+      the value fields of all (this and any other) ephemerons were
+      weakly holding.  The ephemeron may be broken in the course of a
+      computation if the Scheme implementation can prove that the
+      location or sequence of locations will not be kept alive in the
+      future of the computation if the ephemeron is broken.
     </p>
 
     <p>Procedure: <strong>reference-barrier</strong> <var>obj</var></p>
@@ -216,6 +216,43 @@
 
     <p><i>Comment:</i> Other procedures may keep locations alive as
       well.</p>
+
+    <p><i>Comment:</i> At least one procedure is needed that
+      guaranteedly keeps locations alive.  The alternative would have
+      been to require that every reference of a variable would keep
+      the location denoted by it alive but that would have
+      tremendously adverse consequences for optimizing compilers.</p>
+
+    <p>The following program using Chez Scheme's native ephemerons for
+      simplicity shows how code without <code>reference-barrier</code> or an equivalent construct is unreliable:</p>
+<pre>
+(import (scheme))
+
+(define eph #f)
+
+(define (f v)
+  (set! eph (ephemeron-cons v #t)))
+
+(define (g)
+  (car eph))
+
+(define (g/collect)
+  (collect)                             ;simulate GC
+  (car eph))
+
+(define foo
+  (lambda (f g)
+    (let ((v (vector 1 2)))
+      (f v)
+      (let ((w (g)))
+        (boolean=? (vector? v) (vector? w))))))
+
+(assert (foo f g))
+(assert (foo f g/collect))              ;fails
+</pre>
+
+    <p>The underlying reason here is that Chez Scheme's optimizer
+    replaces <code>(vector? v)</code> with <code>#t</code>.</p>
 
     <p>Procedure: <strong>make-ephemeron</strong> <var>key</var> <var>value</var></p>
 
@@ -244,12 +281,33 @@
       of the value field of <var>ephemeron</var>.
     </p>
 
+    <p>The following two procedures are convenience procedures.  The
+      first procedure is not strictly necessary as <code>#f</code> is
+      not a portable key, denoting no location.  The second procedure
+      makes most uses of <code>reference-barrier</code> unnessary.</p>
+
     <p>Procedure: <strong>ephemeron-broken?</strong> <var>ephemeron</var></p>
 
     <p>The <code>ephemeron-broken?</code> procedure
       returns <code>#t</code> if <var>ephemeron</var> has been broken,
       and <code>#f</code> otherwise.
     </p>
+
+    <p>Procedure: <strong>ephemeron-ref</strong> <var>ephemeron</var> <var>key</var> [<var>default</var>]</p>
+
+    <p>If not given, the optional <var>default</var> defaults
+    to <code>#f</code>. The object <var>key</var> should denote a
+    location or a sequence of locations.</p>
+
+    <p>The <code>ephemeron-ref</code> procedure returns the contents
+      of the value field of <var>ephemeron</var> if the ephemeron
+      hasn't been broken and the contents of its key field
+      and <var>key</var> are equivalent in the sense
+      of <code>eq?</code>, and <var>default</var> otherwise.
+    </p>
+
+    <p>Moreover, the location or sequence of locations denoted
+      by <var>key</var> are kept alive.
 
     <h3>Guardians</h3>
 
@@ -465,38 +523,38 @@
     (lambda (wm key)
       (assert (weakmap? wm))
       (let f ([entries (weakmap-entries wm)])
-        (cond ((null? entries)
+        (cond [(null? entries)
                (reference-barrier key)
-              #f)
-              ((eq? (ephemeron-key (car entries)) key)
+               #f]
+              [(eq? (ephemeron-key (car entries)) key)
                (reference-barrier key)
-               #t)
-              (else (f (cdr entries)))))))
+               #t]
+              [else (f (cdr entries))])))))
 
   (define weakmap-set!
     (lambda (wm key val)
       (assert (weakmap? wm))
       (let f ([entries (weakmap-entries wm)]
               [set-tail! (lambda (tail) (weakmap-entries-set! wm tail))])
-        (cond ((null? entries)
-               (set-tail! (list (make-ephemeron key val))))
-              ((eq? (ephemeron-key (car entries)) key)
-               (set-tail! (cons (make-ephemeron key val) (cdr entries))))
-              (else (f (cdr entries)
-                       (lambda (tail) (set-cdr! entries tail))))))))
+        (cond [(null? entries)
+               (set-tail! (list (make-ephemeron key val)))]
+              [(eq? (ephemeron-key (car entries)) key)
+               (set-tail! (cons (make-ephemeron key val) (cdr entries)))]
+              [else (f (cdr entries)
+                       (lambda (tail) (set-cdr! entries tail)))]))))
 
   (define weakmap-ref
     (lambda (wm key default)
       (assert (weakmap? wm))
       (let f ([entries (weakmap-entries wm)])
-        (cond ((null? entries)
+        (cond [(null? entries)
                (reference-barrier key)
-               default)
-              ((eq? (ephemeron-key (car entries)) key)
+               default]
+              [(eq? (ephemeron-key (car entries)) key)
                (let ([val (ephemeron-value (car entries))])
                   (reference-barrier key)
-                  val))
-              (else (f (cdr entries)))))))
+                  val)]
+              [else (f (cdr entries))]))))
 
   (define weakmap-delete!
     (lambda (wm key)
@@ -553,6 +611,21 @@
             (weakmap-ref wm tmp #f))))
 </pre>
 
+    <p>Here is a version of <code>weakmap-ref</code> that uses the convenience procedure <code>ephemeron-ref</code>:</p>
+
+<pre>
+(define weakmap-ref
+  (lambda (wm key default)
+    (assert (weakmap? wm))
+    (let f ([entries (weakmap-entries wm)])
+      (cond [(null? entries)
+             (reference-barrier key)
+             default]
+            [else
+             (or (ephemeron-ref (car entries) key)
+                 (f (cdr entries)))]))))
+</pre>
+
     <h2 id="implementation">Implementation</h2>
 
     <p>An implementation for Chez Scheme is provided.</p>
@@ -584,6 +657,15 @@
       collaborators for creating Chez Scheme, its documentation, and
       the papers on guardians.
     </p>
+
+    <p>In particular, I would like to thank Daphne Preston-Kendal as a
+      member of the SRFI discussion group for asking very good
+      questions and challenging the API and semantics, which helped
+      getting everything right.</p>
+
+    <p>Finally, I would like to thank Arthur Gleckler, SRFI editor,
+      for his patience with the long periods of relative inactivity
+      around this SRFI.</p>
 
     <h2 id="copyright">Copyright</h2>
     <p>&copy; 2024 Marc Nieper-Wißkirchen.</p>
