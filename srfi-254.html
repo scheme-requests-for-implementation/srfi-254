@@ -170,11 +170,23 @@
     </p>
 
     <p>Finally, it stipulates that objects may be <dfn>moved</dfn> in
-      the course of a computation with the following restriction: If
-      an object <var>obj<sub>1</sub></var> is moved, every
-      object <var>obj<sub>2</sub></var> such that <code>eq?</code>
-      returns <code>#t</code> when applied
-      to <var>obj<sub>1</sub></var> and <var>obj<sub>2</sub></var> is moved as well.
+      the course of a computation with the following restrictions:</p>
+
+    <ol>
+      <li>
+        <p>If
+          an object <var>obj<sub>1</sub></var> is moved, every
+          object <var>obj<sub>2</sub></var> such that <code>eq?</code>
+          returns <code>#t</code> when applied
+          to <var>obj<sub>1</sub></var> and <var>obj<sub>2</sub></var> is moved as well.
+        </p>
+      </li>
+      <li>
+        <p>If an object <var>obj<sub>1</sub></var> denotes a location
+          holding an object <var>obj<sub>2</sub></var> that is moved,
+          the object <var>obj<sub>1</sub></var> is moved as well.
+        </p>
+      </li>
     </p>
 
     <h3>Ephemerons</h3>
