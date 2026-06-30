@@ -73,6 +73,24 @@
       so that it can be queried by the programmer.
     </p>
 
+  <h2>Table of contents</h2>
+  <ul>
+    <li><a href="#rationale">Rationale</a></li>
+    <li>
+      <a href="#specification">Specification</a>
+      <ul>
+        <li><a href="#ephemerons">Ephemerons</a></li>
+        <li><a href="#guardians">Guardians</a></li>
+        <li><a href="#transport-cell-guardians">Transport Cell Guardians</a></li>
+        <li><a href="#composite-library">Composite Library</a></li>
+      </ul>
+    </li>
+    <li><a href="#examples">Examples</a></li>
+    <li><a href="#implementation">Implementation</a></li>
+    <li><a href="#references">References</a></li>
+    <li><a href="#acknowledgements">Acknowledgements</a></li>
+  </ul>
+
     <h2 id="issues">Issues</h2>
 
     <ul>
@@ -190,7 +208,7 @@
       </li>
     </ol>
 
-    <h3>Ephemerons</h3>
+    <h3 id="ephemerons">Ephemerons</h3>
 
     <p>The procedures in this section are exported by the <code>(srfi
         :254 ephemerons-and-guardians ephemerons)</code> library.  The
@@ -324,7 +342,7 @@
     <p>Moreover, the location or sequence of locations denoted
       by <var>key</var> are kept alive.
 
-    <h3>Guardians</h3>
+    <h3 id="guardians">Guardians</h3>
 
     <p>The procedures of this section are exported by the <code>(srfi
         :254 ephemerons-and-guardians guardians) library</code>.
@@ -388,7 +406,7 @@
       its argument is a guardian, and <code>#f</code> otherwise.
     </p>
 
-    <h3>Transport Cell Guardians</h3>
+    <h3 id="transport-cell-guardians">Transport Cell Guardians</h3>
 
     <p>The procedures of this section are exported by the <code>(srfi
         :254 ephemerons-and-guardians transport-cell-guardians) library</code>.
@@ -487,7 +505,7 @@
       and <code>#f</code> otherwise.
     </p>
 
-    <h3>Composite Library</h3>
+    <h3 id="composite-library">Composite Library</h3>
 
     <p>The <code>(srfi :254)</code> and <code>(srfi :254
         ephemerons-and-guardians)</code> libraries are a composite of the
