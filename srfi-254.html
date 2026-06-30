@@ -89,24 +89,24 @@
     </p>
 
     <p>Ephemerons and guardians have been implemented in many Scheme
-      systems and are incorporated in other programming languages as
+      systems, and are incorporated in other programming languages as
       well, so there is sufficient experience both in terms of use
       cases and implementability with those features.
     </p>
 
     <p>Transport cell guardians are trivial to implement in Scheme
       systems with non-moving garbage collectors.  In Scheme systems
-      with moving garbage collections, transport cell guardians or an
-      equally powerful concept are needed to when hash values are to
+      with moving garbage collectors, transport cell guardians or an
+      equally powerful concept are needed when hash values are to
       be derived from object addresses.
     </p>
 
     <p>Use cases for ephemerons are portable implementations of hash
-      tables that hold the keys or the associated values or both
-      weakly.</p>
+      tables that weakly hold the keys or the associated values or
+      both.</p>
 
     <p>A use case for guardians is the management of externally
-      allocated resources that need to be eventually freed when all
+      allocated resources that eventually need to be freed when all
       Scheme objects referencing them have been conceptually destroyed
       by the garbage collector.</p>
 
@@ -232,10 +232,10 @@
     <p><i>Comment:</i> Other procedures may keep locations alive as
       well.</p>
 
-    <p><i>Comment:</i> At least one procedure is needed that
-      guaranteedly keeps locations alive.  The alternative would have
+    <p><i>Comment:</i> At least one procedure is needed that is
+      guaranteed to keep locations alive.  The alternative would have
       been to require that every reference of a variable would keep
-      the location denoted by it alive but that would have
+      the location denoted by it alive, but that would have
       tremendously adverse consequences for optimizing compilers.</p>
 
     <p>The following program using Chez Scheme's native ephemerons for
@@ -299,7 +299,7 @@
     <p>The following two procedures are convenience procedures.  The
       first procedure is not strictly necessary as <code>#f</code> is
       not a portable key, denoting no location.  The second procedure
-      makes most uses of <code>reference-barrier</code> unnessary.</p>
+      makes most uses of <code>reference-barrier</code> unnecessary.</p>
 
     <p>Procedure: <strong>ephemeron-broken?</strong> <var>ephemeron</var></p>
 
@@ -332,7 +332,7 @@
 
     <p>Guardians first appeared in <cite><a href="#dybvig">[3]</a></cite>.</p>
 
-    <p>A <dfn>guardian</dfn> is a heterogenous structure with two
+    <p>A <dfn>guardian</dfn> is a heterogeneous structure with two
       types of elements, <dfn>guarded</dfn> elements
       and <dfn>resurrected</dfn> elements.  A guarded element is
       a record structure with two fields called the <dfn>object</dfn>
@@ -361,7 +361,7 @@
 
     <p>
       Guardians are represented by a Scheme
-      procedures <var>guardian</var>.  When <var>guardian</var> is
+      procedure <var>guardian</var>.  When <var>guardian</var> is
       invoked on two Scheme values <var>obj</var> and <var>rep</var>,
       where <var>obj</var> should denote a location or a sequence of
       locations and <var>rep</var> should not be <code>#f</code>, a
@@ -437,9 +437,10 @@
     <p>Procedure: <strong>current-hash</strong> <var>obj</var></p>
 
     <p>The <code>current-hash</code> procedure returns an exact
-      integer. If objects <var>obj<sub>1</sub></var>
+      integer. Consider objects <var>obj<sub>1</sub></var>
       and <var>obj<sub>2</sub></var> such that <code>eq?</code>
-      returns <code>#t</code> when applied to these objects are not
+      returns <code>#t</code> when applied to them. If <var>obj<sub>1</sub></var>
+      and <var>obj<sub>2</sub></var> are not
       moved between an invocation of <code>current-hash</code>
       to <var>obj<sub>1</sub></var> and an invocation
       of <code>current-hash</code> to <var>obj<sub>2</sub></var>, both
@@ -649,7 +650,7 @@
 
     <ol>
       <li id="ghuloum">
-        <a href="https://www.schemeworkshop.org/2007/procPaper3.pdf">Abdulziz
+        <a href="https://www.schemeworkshop.org/2007/procPaper3.pdf">Abdulaziz
           Ghuloum and R. Kent Dybvig: <i>Generation-Friendly Eq Hash
           Tables</i></a>
       </li>
